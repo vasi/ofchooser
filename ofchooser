@@ -109,6 +109,9 @@ drop
 "  "(0d 0a)" .printf bootdefault
 EOF
 
+class ConfigError < Exception
+end
+
 class Loader
   attr_reader :key, :name, :device
   
@@ -150,26 +153,27 @@ class Config
 
   def parse(io)
     io.each do |line|
+      line.chomp!
       line.sub!(/\s*#.*/, '')
       case line
       when /^\s*default\s+(\w)$/
-        raise "Already have a default" if @default
+        raise ConfigError, "Multiple defaults" if @default
         @default = $1
       when /^\s*timeout\s+(\d+)$/
-        raise "Already have a timeout" if @timeout
-        timeout = $1
+        raise ConfigError, "Multiple timeouts" if @timeout
+        @timeout = $1
       when /^\s*(\w)\s+("[^"]+"|\S+)\s+(\S+)$/
         key, name, device = $1, $2, $3
         name.gsub!('"', '')
         
         loader = Loader.new(key, name, device)
-        raise "Already used key #{key}" if @keys.include?(loader.key)
+        raise ConfigError, "Multiple loaders with key '#{key}'" if @keys.include?(loader.key)
         @loaders << loader
         @keys[loader.key] = true
       when /^\s*$/
         # pass
       else
-        raise "Can't understand #{line}"
+        raise ConfigError, "Can't understand line '#{line}'"
       end
     end
   end
@@ -198,11 +202,11 @@ class Config
   end
 
   def script
-    raise "No loaders" if @loaders.empty?
+    raise ConfigError, "No loaders" if @loaders.empty?
     @timeout ||= 10
     @timeout = 0 if @loaders.size == 1
     @default ||= @loaders.first.key
-    raise "Unknown key #{key}" unless @keys.include?(@default)
+    raise ConfigError, "Unknown key '#@default'" unless @keys.include?(@default)
 
     ERB.new(TemplateScript).result(binding)
   end
@@ -220,5 +224,10 @@ class Config
 end
 
 config_file, output_file = *ARGV
-config = Config.new(config_file)
-config.write(output_file)
+begin
+  config = Config.new(config_file)
+  config.write(output_file)
+rescue ConfigError => e
+  $stderr.puts "Config error: #{e}"
+  exit 1
+end
