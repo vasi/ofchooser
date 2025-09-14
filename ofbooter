@@ -1,0 +1,223 @@
+#!/usr/bin/env ruby
+
+require 'erb'
+require 'cgi'
+
+TemplateXML = <<'EOF'
+<CHRP-BOOT>
+<COMPATIBLE>
+MacRISC MacRISC3 MacRISC4
+</COMPATIBLE>
+<DESCRIPTION>
+Yellow Dog Linux First Stage Bootstrap
+</DESCRIPTION>
+<BOOT-SCRIPT>
+  <%= CGI.escapeHTML(script) %>
+</BOOT-SCRIPT>
+<OS-BADGE-ICONS>
+1010
+000000000000F8FEACF6000000000000
+0000000000F5FFFFFEFEF50000000000
+00000000002BFAFEFAFCF70000000000
+0000000000F65D5857812B0000000000
+0000000000F5350B2F88560000000000
+0000000000F6335708F8FE0000000000
+00000000005600F600F5FD8100000000
+00000000F9F8000000F5FAFFF8000000
+000000008100F5F50000F6FEFE000000
+000000F8F700F500F50000FCFFF70000
+00000088F70000F50000F5FCFF2B0000
+0000002F582A00F5000008ADE02C0000
+00090B0A35A62B0000002D3B350A0000
+000A0A0B0B3BF60000505E0B0A0B0A00
+002E350B0B2F87FAFCF45F0B2E090000
+00000007335FF82BF72B575907000000
+000000000000ACFFFF81000000000000
+000000000081FFFFFFFF810000000000
+0000000000FBFFFFFFFFAC0000000000
+000000000081DFDFDFFFFB0000000000
+000000000081DD5F83FFFD0000000000
+000000000081DDDF5EACFF0000000000
+0000000000FDF981F981FFFF00000000
+00000000FFACF9F9F981FFFFAC000000
+00000000FFF98181F9F981FFFF000000
+000000ACACF981F981F9F9FFFFAC0000
+000000FFACF9F981F9F981FFFFFB0000
+00000083DFFBF981F9F95EFFFFFC0000
+005F5F5FDDFFFBF9F9F983DDDD5F0000
+005F5F5F5FDD81F9F9E7DF5F5F5F5F00
+0083DD5F5F83FFFFFFFFDF5F835F0000
+000000FBDDDFACFBACFBDFDFFB000000
+000000000000FFFFFFFF000000000000
+0000000000FFFFFFFFFFFF0000000000
+0000000000FFFFFFFFFFFF0000000000
+0000000000FFFFFFFFFFFF0000000000
+0000000000FFFFFFFFFFFF0000000000
+0000000000FFFFFFFFFFFF0000000000
+0000000000FFFFFFFFFFFFFF00000000
+00000000FFFFFFFFFFFFFFFFFF000000
+00000000FFFFFFFFFFFFFFFFFF000000
+000000FFFFFFFFFFFFFFFFFFFFFF0000
+000000FFFFFFFFFFFFFFFFFFFFFF0000
+000000FFFFFFFFFFFFFFFFFFFFFF0000
+00FFFFFFFFFFFFFFFFFFFFFFFFFF0000
+00FFFFFFFFFFFFFFFFFFFFFFFFFFFF00
+00FFFFFFFFFFFFFFFFFFFFFFFFFF0000
+000000FFFFFFFFFFFFFFFFFFFF000000
+</OS-BADGE-ICONS>
+</CHRP-BOOT>
+EOF
+
+TemplateScript = <<'EOF'
+: .printf fb8-write drop ;
+probe-usb
+<%= boot_words %>
+<%= default_word %>
+
+" screen" output
+dev screen
+" "(0000000000aa00aa0000aaaaaa0000aa00aaaa5500aaaaaa)" drop 0 7 set-colors
+" "(5555555555ff55ff5555ffffff5555ff55ffffff55ffffff)" drop 8 15 set-colors
+device-end
+f to foreground-color
+0 to background-color
+" "(0C)" .printf
+
+" ofbooter"(0d 0a)" .printf
+"  "(0d 0a)" .printf
+<%= key_options %>
+"  "(0d 0a)" .printf
+" Timing out after <%= timeout %> seconds"(0d 0a)" .printf
+"  "(0d 0a)" .printf
+" Stage 1 Boot: " .printf
+
+variable timeout
+get-msecs d# <%= timeout %> 3E8 * + timeout !
+begin
+  key? if
+    key case
+<%= key_detects %>
+    timeout @ -1 <> if
+      -1 timeout !
+      " "(0d 0a)Timeout aborted, boot: " .printf
+    then
+    endcase
+  then
+  timeout @ get-msecs u<
+until
+drop
+"  "(0d 0a)" .printf bootdefault
+EOF
+
+class Loader
+  attr_reader :key, :name, :device
+  
+  def initialize(key, name, device)
+    @key, @name, @device = key, name, device
+  end
+
+  def boot
+    if device == "OF"
+      "quit"
+    else
+      "load-base release-load-area \" #{device}\" $boot"
+    end
+  end
+
+  def boot_word
+    ": boot#{key} \" Booting #{name}...\" .printf 100 ms #{boot} ;"
+  end
+
+  def key_option(indent, trail)
+    "\" #{indent} #{key} for #{name}#{trail}\"(0d 0a)\" .printf"
+  end
+
+  def key_detect
+    "ascii #{key} of \" #{key}\"(0d 0a)\" .printf boot#{key} endof"
+  end
+end
+
+class Config
+  attr_reader :timeout
+
+  def initialize(config_file)
+    @default = nil
+    @timeout = nil
+    @loaders = []
+    @keys = {}
+    open(config_file) {|f| parse(f)}
+  end
+
+  def parse(io)
+    io.each do |line|
+      case line
+      when /^\s*default\s+(\w)$/
+        raise "Already have a default" if @default
+        @default = $1
+      when /^\s*timeout\s+(\d+)$/
+        raise "Already have a timeout" if @timeout
+        timeout = $1
+      when /^\s*(\w)\s+("[^"]+"|\S+)\s+(\S+)$/
+        key, name, device = $1, $2, $3
+        name.gsub!('"', '')
+        
+        loader = Loader.new(key, name, device)
+        raise "Already used key #{key}" if @keys.include?(loader.key)
+        @loaders << loader
+        @keys[loader.key] = true
+      when /^\s*$/
+        # pass
+      else
+        raise "Can't understand #{line}"
+      end
+    end
+  end
+
+  def boot_words
+    @loaders.map {|l| l.boot_word}.join("\n")
+  end
+
+  def default_word
+    ": bootdefault boot#{@default} ;"
+  end
+
+  def key_options
+    results = []
+    @loaders.each_with_index do |l, i|
+      indent = "Press"
+      indent = " " * indent.size if i > 0
+      trail = (i < @loaders.size - 1 ) ? "," : ""
+      results << l.key_option(indent, trail)
+    end
+    results.join("\n")
+  end
+
+  def key_detects
+    @loaders.map {|l| l.key_detect}.join("\n")
+  end
+
+  def script
+    raise "No loaders" if @loaders.empty?
+    @timeout ||= 5
+    @timeout = 0 if @loaders.size == 1
+    @default ||= @loaders.first.key
+    raise "Unknown key #{key}" unless @keys.include?(@default)
+
+    ERB.new(TemplateScript).result(binding)
+  end
+
+  def output
+    ERB.new(TemplateXML).result(binding)
+  end
+
+  def write(file)
+    f = file ? File.new(file, 'w') : $stdout
+    f.write(output)
+  ensure
+    f.close
+  end
+end
+
+config_file, output_file = *ARGV
+config = Config.new(config_file)
+config.write(output_file)
