@@ -33,7 +33,7 @@ See [the example configuration file](ofchooser.cfg.example).
 
 ### Building a boot script
 
-Make sure you have Ruby installed. Any Ruby version since 1.8 should work, so even old OSes like Yellowdog Linux or Mac OS X 10.4 should be fine.
+Make sure you have Ruby installed. Any Ruby version since 1.8 should work, so even old OSes like Yellowdog Linux or Mac OS X 10.4 should be fine. You'll also need the ERB Ruby module, which is usually installed by default.
 
 Run: `./ofchooser myconfig.cfg ofchooser.b`
 
