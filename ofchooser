@@ -83,13 +83,13 @@ f to foreground-color
 0 to background-color
 " "(0C)" .printf
 
-" ofchooser"(0d 0a)" .printf
+" Welcome to ofchooser"(0d 0a)" .printf
 "  "(0d 0a)" .printf
 <%= key_options %>
 "  "(0d 0a)" .printf
 " Timing out after <%= timeout %> seconds"(0d 0a)" .printf
 "  "(0d 0a)" .printf
-" Stage 1 Boot: " .printf
+" Choose an option: " .printf
 
 variable timeout
 get-msecs d# <%= timeout %> 3E8 * + timeout !
@@ -99,7 +99,7 @@ begin
 <%= key_detects %>
     timeout @ -1 <> if
       -1 timeout !
-      " "(0d 0a)Timeout aborted, boot: " .printf
+      " "(0d)Timeout aborted, choose an option: " .printf
     then
     endcase
   then
