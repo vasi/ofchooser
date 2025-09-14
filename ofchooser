@@ -83,7 +83,7 @@ f to foreground-color
 0 to background-color
 " "(0C)" .printf
 
-" ofbooter"(0d 0a)" .printf
+" ofchooser"(0d 0a)" .printf
 "  "(0d 0a)" .printf
 <%= key_options %>
 "  "(0d 0a)" .printf
