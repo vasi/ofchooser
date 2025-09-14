@@ -198,7 +198,7 @@ class Config
 
   def script
     raise "No loaders" if @loaders.empty?
-    @timeout ||= 5
+    @timeout ||= 10
     @timeout = 0 if @loaders.size == 1
     @default ||= @loaders.first.key
     raise "Unknown key #{key}" unless @keys.include?(@default)

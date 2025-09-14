@@ -4,7 +4,7 @@ x   "Mac OS X 10.4"         hd:10,\\:tbxi
 f   "Alias to Firewire disk"   fwd:10,\\:tbxi
 p   "Full OF path"          /pci@f2000000/usb@18/disk:,\boot\grub\powerpc.elf
 y   Yellowdog               hd:12,yaboot
-d   Debian                  hd15,grub
+d   Debian                  hd15,grub   # Comment
 o   "Exit to Open Firmware" OF
 
 default i
