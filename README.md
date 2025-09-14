@@ -85,5 +85,7 @@ Finally, as an extension, ofchooser treats the path "OF" as a special value, whi
 ## License
 
 ⓒ 2025 Dave Vasilevsky
+
 Licensed under the GPL version 2 (or later), see [COPYING](COPYING).
+
 Derived from [Yaboot](https://github.com/yaboot/yaboot).
