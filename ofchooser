@@ -131,8 +131,8 @@ class Loader
     ": boot#{key} \" Booting #{name}...\" .printf 100 ms #{boot} ;"
   end
 
-  def key_option(indent, trail)
-    "\" #{indent} #{key} for #{name}#{trail}\"(0d 0a)\" .printf"
+  def key_option(indent)
+    "\" #{indent} #{key} for #{name}\"(0d 0a)\" .printf"
   end
 
   def key_detect
@@ -191,8 +191,7 @@ class Config
     @loaders.each_with_index do |l, i|
       indent = "Press"
       indent = " " * indent.size if i > 0
-      trail = (i < @loaders.size - 1 ) ? "," : ""
-      results << l.key_option(indent, trail)
+      results << l.key_option(indent)
     end
     results.join("\n")
   end
