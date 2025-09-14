@@ -150,6 +150,7 @@ class Config
 
   def parse(io)
     io.each do |line|
+      line.sub!(/\s*#.*/, '')
       case line
       when /^\s*default\s+(\w)$/
         raise "Already have a default" if @default

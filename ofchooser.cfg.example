@@ -1,6 +1,6 @@
 i   "Internal Mac OS 9"     hd:9,\\:tbxi
 x   "Mac OS X 10.4"         hd:10,\\:tbxi
-3   "Mac OS X 10.3          hd:11,\\:tbxi
+3   "Mac OS X 10.3"         hd:11,\\:tbxi
 f   "Alias to Firewire disk"   fwd:10,\\:tbxi
 p   "Full OF path"          /pci@f2000000/usb@18/disk:,\boot\grub\powerpc.elf
 y   Yellowdog               hd:12,yaboot

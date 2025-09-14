@@ -69,7 +69,7 @@ The device part can also be a short Open Firmware alias, such as `hd` for the in
 
 The partition part is just a number indicating the partition on which the boot file lives. Note that Apple partitions often have unexpected numbers due to hidden partitions. Use `blkid` on Linux, or `diskutil list` on Mac OS X to see all your partitions and their actual numbers.
 
-The path part is a directory-and-file path to the boot file. The path uses backslashes (`\`) as directory separators. You can omit the first separator, so a path in the root directory can be just `ofchooser.b`. Or a longer path could be `ppc\grub\grub`.
+The path part is a directory-and-file path to the boot file. The path uses backslashes (`\`) as directory separators. You can omit the first separator, so a path in the root directory can be just `ofchooser.b`. Or a longer path could be `ppc\grub\grub`. There's also a special path `\\:tbxi` that chooses whatever boot file HFS/HFS+ considers "blessed", and is usually the easiest way to choose the Mac OS 9 or Mac OS X loader.
 
 To make sure you have a path correct, you can use the `dir` command in Open Firmware. Eg: `dir hd:9,\` will list the root directory of the given path.
 
