@@ -202,9 +202,12 @@ class Config
   end
 
   def script
+    if @loaders.size == 1
+      return @loaders.first.boot
+    end
+
     raise ConfigError, "No loaders" if @loaders.empty?
     @timeout ||= 10
-    @timeout = 0 if @loaders.size == 1
     @default ||= @loaders.first.key
     raise ConfigError, "Unknown key '#@default'" unless @keys.include?(@default)
 

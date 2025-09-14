@@ -23,9 +23,11 @@ To use ofchooser, you need to first write a config file, then build and install 
 
 To use ofchooser, you'll need a small configuration file. This is just a text file, using "#" to start comments. Each line is one of:
 
-* A loader: `k "My loader" hd:9,yaboot` configures a loader named "My loader", with the keyboard shortcut "k". The path to the file being loaded must be an [Open Firmware path](#open-firmware-path-tutorial).
+* A loader: `k "My loader" hd:9,yaboot` configures a second-stage bootloader named "My loader", with the keyboard shortcut "k". The path to the file being loaded must be an [Open Firmware path](#open-firmware-path-tutorial).
 * A default selection: `default k` makes the loader with the shortcut "k" the default if the timeout passes. If no default is specificed, the first loader will be used.
 * A timeout duration: `timeout 5` sets a five-second timeout, before the default booter is chosen. The default timeout is 10 seconds.
+
+If only a single loader is specified, ofchooser will skip the chooser interface, and just straight to that loader.
 
 See [the example configuration file](ofchooser.cfg.example).
 
