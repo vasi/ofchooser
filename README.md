@@ -14,6 +14,7 @@ Improvements over Yaboot's chooser:
 * Uses a simple config file. Yaboot uses one complex file for both first-stage "choosing an OS" and second-stage "choosing a kernel".
 * Allows USB boot.
 * Can be configured and installed from either OS X or Linux.
+* Falls back to other options if the default is not available, eg: if it's on a damaged partition or an external disk.
 
 ## Usage
 

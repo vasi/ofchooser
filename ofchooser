@@ -87,7 +87,7 @@ f to foreground-color
 "  "(0d 0a)" .printf
 <%= key_options %>
 "  "(0d 0a)" .printf
-" Timing out after <%= timeout %> seconds"(0d 0a)" .printf
+" Booting <%= default.name %> after <%= timeout %> seconds"(0d 0a)" .printf
 "  "(0d 0a)" .printf
 " Choose an option: " .printf
 
@@ -106,7 +106,8 @@ begin
   timeout @ get-msecs u<
 until
 drop
-"  "(0d 0a)" .printf bootdefault
+"  "(0d 0a)" .printf
+<%= boot_default %>
 EOF
 
 class ConfigError < Exception
@@ -125,6 +126,16 @@ class Loader
     else
       "load-base release-load-area \" #{device}\" $boot"
     end
+  end
+
+  def dev
+    md = /^(.*?):/.match(device) or return nil
+    md[1]
+  end
+
+  def try_boot
+    return "boot#{key}" unless dev
+    "\" #{dev}\" open-dev 0<> if boot#{key} then"
   end
 
   def boot_word
@@ -147,7 +158,7 @@ class Config
     @default = nil
     @timeout = nil
     @loaders = []
-    @keys = {}
+    @by_key = {}
     open(config_file) {|f| parse(f)}
   end
 
@@ -167,15 +178,22 @@ class Config
         name.gsub!('"', '')
         
         loader = Loader.new(key, name, device)
-        raise ConfigError, "Multiple loaders with key '#{key}'" if @keys.include?(loader.key)
+        if @by_key.include?(loader.key)
+          raise ConfigError, "Multiple loaders with key '#{key}'"
+        end
         @loaders << loader
-        @keys[loader.key] = true
+        @by_key[loader.key] = loader
       when /^\s*$/
         # pass
       else
         raise ConfigError, "Can't understand line '#{line}'"
       end
     end
+  end
+
+  def default
+    @default ||= @loaders.first.key
+    @by_key[@default]
   end
 
   def boot_words
@@ -200,6 +218,11 @@ class Config
     @loaders.map {|l| l.key_detect}.join("\n")
   end
 
+  def boot_default
+    loader_order = [default] + (@loaders - [default])
+    loader_order.map {|l| l.try_boot}.join("\n")
+  end
+
   def script
     if @loaders.size == 1
       return @loaders.first.boot
@@ -207,8 +230,7 @@ class Config
 
     raise ConfigError, "No loaders" if @loaders.empty?
     @timeout ||= 10
-    @default ||= @loaders.first.key
-    raise ConfigError, "Unknown key '#@default'" unless @keys.include?(@default)
+    raise ConfigError, "Unknown key '#@default'" unless default
 
     ERB.new(TemplateScript).result(binding)
   end
