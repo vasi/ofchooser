@@ -2,6 +2,8 @@
 
 Boot chooser for PowerPC Macs
 
+![alt text](ofchooser.jpg)
+
 ## Features
 
 Like Yaboot, allows choosing Mac OS 9, Mac OS X and Linux (and probably also other OSes).
