@@ -70,7 +70,7 @@ EOF
 
 TemplateScript = <<'EOF'
 : .printf fb8-write drop ;
-probe-usb
+" probe-usb" $find if execute else 2drop then
 <%= boot_words %>
 <%= default_word %>
 
