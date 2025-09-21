@@ -26,9 +26,16 @@ To use ofchooser, you need to first write a config file, then build and install 
 
 To use ofchooser, you'll need a small configuration file. This is just a text file, using "#" to start comments. Each line is one of:
 
-* A loader: `k "My loader" hd:9,yaboot` configures a second-stage bootloader named "My loader", with the keyboard shortcut "k". The path to the file being loaded must be an [Open Firmware path](#open-firmware-path-tutorial). If the name has no spaces, it does not have to be quoted.
-* A default selection: `default k` makes the loader with the shortcut "k" the default if the timeout passes. If no default is specificed, the first loader will be used.
-* A timeout duration: `timeout 5` sets a five-second timeout, before the default booter is chosen. The default timeout is 10 seconds.
+* A loader: `k "My loader" hd:9,yaboot` configures a second-stage bootloader named "My loader", with the keyboard shortcut "k".
+    * If the name has no spaces, it does not have to be quoted.
+    * The path to the file being loaded must be an [Open Firmware path](#open-firmware-path-tutorial).
+    * Optionally, a loader line can have at the end a comma-separated list of loader options, eg: ` probe-usb`.
+* A default selection: `default k` makes the loader with the shortcut "k" the default if the timeout passes. If no default is specified, the first loader will be used.
+* A timeout duration: `timeout 5` sets a five-second timeout, before the default loader is chosen. The default timeout is 10 seconds.
+
+Loader options:
+
+* probe-usb: Before booting this loader, will probe USB ports. This is necessary to boot off USB on some models, but on other models can temporarily disable other USB devices like keyboards and mice.
 
 If only a single loader is specified, ofchooser will skip the chooser interface, and just straight to that loader.
 
@@ -82,7 +89,7 @@ Finally, as an extension, ofchooser treats the path "OF" as a special value, whi
 
 ## Caveats
 
-* ofchooser is just a first-stage boot-chooser. You still need a second-stage bootleader like Yaboot or Grub to boot Linux.
+* ofchooser is just a first-stage boot-chooser. You still need a second-stage bootloader like Yaboot or Grub to boot Linux.
 * Only tested on a single iBook Dual USB.
 
 ## License

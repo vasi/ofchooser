@@ -70,7 +70,6 @@ EOF
 
 TemplateScript = <<'EOF'
 : .printf fb8-write drop ;
-probe-usb
 <%= boot_words %>
 <%= default_word %>
 
@@ -114,10 +113,10 @@ class ConfigError < Exception
 end
 
 class Loader
-  attr_reader :key, :name, :device
+  attr_reader :key, :name, :device, :options
   
-  def initialize(key, name, device)
-    @key, @name, @device = key, name, device
+  def initialize(key, name, device, options)
+    @key, @name, @device, @options = key, name, device, options
   end
 
   def boot
@@ -135,11 +134,15 @@ class Loader
 
   def try_boot
     return "boot#{key}" unless dev
-    "\" #{dev}\" open-dev 0<> if boot#{key} then"
+    "#{probe_usb} \"#{dev}\" open-dev 0<> if boot#{key} then"
+  end
+
+  def probe_usb
+    options.include?("probe-usb") ? "probe-usb" : ""
   end
 
   def boot_word
-    ": boot#{key} \" Booting #{name}...\" .printf 100 ms #{boot} ;"
+    ": boot#{key} \" Booting #{name}...\" .printf 100 ms #{probe_usb} #{boot} ;"
   end
 
   def key_option(indent)
@@ -166,6 +169,7 @@ class Config
     io.each do |line|
       line.chomp!
       line.sub!(/\s*#.*/, '')
+      line.strip!
       case line
       when /^\s*default\s+(\w)$/
         raise ConfigError, "Multiple defaults" if @default
@@ -173,11 +177,12 @@ class Config
       when /^\s*timeout\s+(\d+)$/
         raise ConfigError, "Multiple timeouts" if @timeout
         @timeout = $1
-      when /^\s*(\w)\s+("[^"]+"|\S+)\s+(\S+)$/
-        key, name, device = $1, $2, $3
+      when /^\s*(\w)\s+("[^"]+"|\S+)\s+(\S+)(?:\s+(\S+))?$/
+        key, name, device, options = $1, $2, $3, $4
         name.gsub!('"', '')
+        options = (options || "").split(",")
         
-        loader = Loader.new(key, name, device)
+        loader = Loader.new(key, name, device, options)
         if @by_key.include?(loader.key)
           raise ConfigError, "Multiple loaders with key '#{key}'"
         end

@@ -5,6 +5,7 @@ f   "Alias to Firewire disk"   fwd:10,\\:tbxi
 p   "Full OF path"          /pci@f2000000/usb@18/disk:,\boot\grub\powerpc.elf
 y   Yellowdog               hd:12,yaboot
 d   Debian                  hd15,grub   # Comment
+u   "USB boot"              usb:,\\:tbxi   probe-usb   # Uses extra option to probe USB
 o   "Exit to Open Firmware" OF
 
 default i
