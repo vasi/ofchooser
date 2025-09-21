@@ -134,7 +134,7 @@ class Loader
 
   def try_boot
     return "boot#{key}" unless dev
-    "#{probe_usb} \"#{dev}\" open-dev 0<> if boot#{key} then"
+    "#{probe_usb} \" #{dev}\" open-dev 0<> if boot#{key} then"
   end
 
   def probe_usb
